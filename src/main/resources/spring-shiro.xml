@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!-- 设置密码加密策略 md5hash -->
+    <bean id="passwordMatcher" class="com.gong.shiro.CustomCredentialsMatcher"/>
+    <!-- 会话ID生成器 -->
+    <bean id="sessionIdGenerator"
+          class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"/>
+    <!-- 会话DAO -->
+    <bean id="sessionDAO" class="org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO">
+        <property name="activeSessionsCacheName" value="shiro-activeSessionCache"/><!--设置Session缓存名字，默认就是shiro-activeSessionCache-->
+        <property name="sessionIdGenerator" ref="sessionIdGenerator"/>
+
+    </bean>
+    <!-- 会话验证调度器 Shiro也提供了使用Quartz会话验证调度器：--><!--在web环境中，如果用户不主动退出是不知道会话是否过期的，因此需要定期的检测会话是否过期，Shiro提供了会话验证调度器SessionValidationScheduler来做这件事情。-->
+    <bean id="sessionValidationScheduler" class="org.apache.shiro.session.mgt.quartz.QuartzSessionValidationScheduler">
+        <property name="sessionValidationInterval" value="1800000"/><!--设置调度时间间隔，单位毫秒，默认就是1小时；-->
+        <property name="sessionManager" ref="sessionManager"/><!--设置会话验证调度器进行会话验证时的会话管理器-->
+    </bean>
+    <!-- 会话Cookie模板 -->
+    <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="work_sid"/> <!--sessionIdCookie.name：设置Cookie名字，默认为JSESSIONID-->
+        <property name="httpOnly" value="true"/><!--如果设置为true，则客户端不会暴露给客户端脚本代码，使用HttpOnly cookie有助于减少某些类型的跨站点脚本攻击；此特性需要实现了Servlet 2.5 MR6及以上版本的规范的Servlet容器支持-->
+        <property name="maxAge" value="1800"/><!--设置Cookie的过期时间，秒为单位，默认-1表示关闭浏览器时过期Cookie-->
+    </bean>
+    <!-- 会话管理器 -->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="1800000"/><!-- session的失效时长，单位毫秒 1小时: 3600000 --><!-- 设置全局会话超时时间，默认30分钟，即如果30分钟内没有访问会话将过期 1800000 -->
+        <property name="deleteInvalidSessions" value="true"/><!-- 删除失效的session -->
+        <property name="sessionValidationSchedulerEnabled" value="true"/> <!-- 是否开启会话验证器，默认是开启的 -->
+        <property name="sessionValidationScheduler" ref="sessionValidationScheduler"/>
+        <property name="sessionDAO" ref="sessionDAO"/> <!-- Shiro提供SessionDAO用于会话的CRUD -->
+        <property name="sessionIdCookieEnabled" value="true"/><!--是否启用/禁用Session Id Cookie，默认是启用的；如果禁用后将不会设置Session Id Cookie，即默认使用了Servlet容器的JSESSIONID，且通过URL重写（URL中的“;JSESSIONID=id”部分）保存Session Id-->
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+    </bean>
+
+    <!--id与web.xml中shiro过滤器的名字相匹配-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/><!-- Shiro的核心安全接口,这个属性是必须的 -->
+        <property name="loginUrl" value="/login" /> <!-- 身份认证失败，则跳转到登录页面的配置 -->
+        <!-- <property name="unauthorizedUrl" value="/unauthorized" /> 权限认证失败，则跳转到指定页面 -->
+        <property name="filters">
+            <map>
+                <entry key="authc" value-ref="formAuthenticationFilter"/><!--要使用自定义表单验证过滤器需要设置key为anon-->
+            </map>
+        </property>
+        <property name="filterChainDefinitions"> <!-- Shiro连接约束配置,即过滤链的定义 -->
+            <value>            <!-- **代表任意子目录 -->
+                /getVerifyCode = anon
+                /static/** = anon
+                /logout=logout
+                /** = authc
+                <!--
+                  anon  不需要认证
+                  authc 需要认证
+                  user  验证通过或RememberMe登录的都可以
+              -->
+            </value>
+        </property>
+    </bean>
+    <!-- 自定义form认证过虑器 -->
+    <!-- 基于Form表单的身份验证过滤器，不配置将也会注册此过虑器，表单中的用户账号、密码及loginurl将采用默认值，建议配置 -->
+    <bean id="formAuthenticationFilter" class="com.gong.shiro.CustomFormAuthenticationFilter ">
+        <!-- 表单中账号的input名称 -->
+        <property name="usernameParam" value="loginName" />
+        <!-- 表单中密码的input名称 -->
+        <property name="passwordParam" value="password" />
+    </bean>
+
+    <!-- 用户授权/认证信息Cache, 采用EhCache  缓存 -->
+    <bean id="shiroEhcacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <property name="cacheManagerConfigFile" value="classpath:ehcache-shiro.xml"/><!--设置ehcache缓存的配置文件-->
+    </bean>
+    <!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+    <!-- 生成代理，通过代理进行控制  --> <!-- 开启Shiro注解 -->
+  <!--  <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor">
+          <property name="proxyTargetClass" value="true"/>//加上这个就不会导致使用jdk动态代理
+          </bean> -->
+    <!--不要使用上面的代理方式 会导致自动使用jdk动态代理 使用下面的这种配置就是基于类的代理cglib-->
+    <!--<aop:aspectj-autoproxy expose-proxy="true" proxy-target-class="true"/>-->
+
+    <!-- 安全管理器 -->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
+        <property name="realm" ref="authRealm"/><!-- 引用自定义的realm -->
+        <!-- 二级缓存 -->
+        <!-- Shiro默认会使用Servlet容器的Session,可通过sessionMode属性来指定使用Shiro原生Session -->
+        <!-- 即<property name="sessionMode" value="native"/>,详细说明见官方文档 -->
+        <property name="sessionMode" value="native"/>
+        <property name="cacheManager" ref="shiroEhcacheManager"/>
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+    <!-- 自定义权限认证 -->
+    <bean id="authRealm" class="com.gong.shiro.AuthRealm">
+        <!-- 自定义密码加密算法  配置密码匹配器-->
+        <property name="credentialsMatcher" ref="passwordMatcher"/>
+        <property name="cachingEnabled" value="true"/><!--启动缓存-->
+        <property name="authenticationCachingEnabled" value="true"/><!--启用认证缓存-->
+        <property name="authenticationCacheName" value="authenticationCache"/><!--要与echcahe-shiro.xml中的缓存名字一致-->
+        <property name="authorizationCachingEnabled" value="true"/><!--启用授权缓存-->
+        <property name="authorizationCacheName" value="authorizationCache"/>
+    </bean>
+   <!-- <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <props>
+                <prop key="org.apache.shiro.authz.UnauthorizedException">error/403</prop>&lt;!&ndash;shiro权限校验没通过跳转&ndash;&gt;
+                <prop key="java.lang.Throwable">error/500</prop>
+            </props>
+        </property>
+    </bean>--><!--使用了ExceptionHandler 来做具体的异常处理-->
+</beans>

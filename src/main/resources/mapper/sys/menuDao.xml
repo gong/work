@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gong.dao.sys.MenuDao">
+    <sql id="menuColumns">
+        a.*
+    </sql>
+    <select id="getMenuListByUser" resultType="com.gong.model.sys.Menu">
+        SELECT <include refid="menuColumns"/>
+        FROM menu as a
+        LEFT JOIN role_menu AS rm ON rm.menu_id = a.menu_id
+		JOIN role AS r ON r.role_id = rm.role_id AND r.useable='1'
+		JOIN user_role AS ur ON ur.role_id = r.role_id
+		JOIN user AS u ON u.user_id = ur.user_id AND u.user_id = #{userId}
+		WHERE a.delete_flag = 0 AND r.delete_flag = 0 AND u.delete_flag = 0
+		ORDER BY a.sort
+    </select>
+
+    <select id="getAllMenuList" resultType="com.gong.model.sys.Menu">
+        SELECT <include refid="menuColumns"/>
+         FROM menu as a
+        WHERE a.delete_flag=0
+        ORDER by a.sort
+    </select>
+
+</mapper>

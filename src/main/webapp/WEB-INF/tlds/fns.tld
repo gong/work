@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+  version="2.0">
+    
+  <description>JSTL 1.1 functions library</description>
+  <display-name>JSTL functions sys</display-name>
+  <tlib-version>1.1</tlib-version>
+  <short-name>fns</short-name>
+  <uri>http://java.sun.com/jsp/jstl/functionss</uri>
+
+  <!-- UserUtils -->
+  <function>
+    <description>获取当前用户对象</description>
+    <name>getUser</name>
+    <function-class>com.gong.utils.UserUtils</function-class>
+    <function-signature>com.gong.model.sys.User getUser()</function-signature>
+    <example>${fns:getUser()}</example>  
+  </function>
+
+  <function>
+    <description>获取授权用户信息</description>
+    <name>getRoleList</name>
+    <function-class>com.gong.utils.UserUtils</function-class>
+    <function-signature>java.util.List getRoleList()</function-signature>
+    <example>${fns:getRoleList()}</example>
+  </function>
+  
+  <function>
+    <description>获取当前用户的菜单对象列表</description>
+    <name>getMenuList</name>
+    <function-class>com.gong.utils.UserUtils</function-class>
+    <function-signature>java.util.List getMenuList()</function-signature>
+    <example>${fns:getMenuList()}</example>  
+  </function>
+
+  <function>
+    <description>判断当前的list中是否包含某个String</description>
+    <name>judge</name>
+    <function-class>com.gong.utils.UserUtils</function-class>
+    <function-signature>boolean judge(java.util.List,java.lang.String)</function-signature>
+  </function>
+
+</taglib>

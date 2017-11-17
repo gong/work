@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+       default-autowire="byName">
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:/properties/*.properties</value>
+            </list>
+        </property>
+    </bean>
+    <!-- aspectj aop启用CGliB代理 -->
+    <aop:aspectj-autoproxy expose-proxy="true" proxy-target-class="true"/>
+    <context:annotation-config/>
+    <!-- 扫描service -->
+    <context:component-scan base-package="com.gong.service"/>
+    <import resource="classpath:spring-mybatis.xml"/>
+    <import resource="classpath:spring-shiro.xml"/>
+    <!-- <import resource="classpath:spring-quartz.xml"/>-->
+    <bean id="userUtils" class="com.gong.utils.SpringContextHolder"/>
+
+
+</beans>

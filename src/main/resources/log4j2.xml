@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="off">
+    <Properties>
+        <Property name="logdir">${sys:catalina.base}/logs</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY" />
+            <PatternLayout pattern="%date{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %level [%file] - %msg%n" />
+        </Console>
+        <RollingFile name="RollingFile"
+                     fileName="${logdir}/work.log"
+                     filePattern="${logdir}/work.%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="%date{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %level [%C{36}.%M] - %msg%n" />
+            <Filters>
+                <!-- 过滤trace级别以上，error级别（不包含error）以下的日志-->
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL" />
+                <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY" />
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/><!--每天产生一个文件-->
+                <SizeBasedTriggeringPolicy size="250 MB"/><!--最大容量-->
+            </Policies>
+            <DefaultRolloverStrategy><!--文件保存30天后自动清除-->
+                <Delete basePath="${logdir}" maxDepth="1">
+                    <IfFileName glob="work.*.log" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+        <!-- 只显示error级别的信息 -->
+        <RollingFile name="RollingFileError"
+                     fileName="${logdir}/error.log"
+                     filePattern="${logdir}/error-%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="%d{yyyy.MM.dd HH:mm:ss.SSS} [%thread] %level [%C{36}.%M:%L] - %msg%xEx%n" />
+            <Filters>
+                <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY" />
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.gongxin" level="DEBUG" />
+
+        <Root level="TRACE" additivity="false">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="RollingFile" />
+            <AppenderRef ref="RollingFileError" />
+        </Root>
+    </Loggers>
+</configuration>
