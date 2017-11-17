@@ -1,9 +1,26 @@
+<<<<<<< HEAD
 # maven ignore
 target/
+=======
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+>>>>>>> 9eea3a86861f1c10c25d636d3c4271e3e86adc63
 *.jar
 *.war
 *.ear
 *.zip
+<<<<<<< HEAD
 *.tar
 *.tar.gz
 
@@ -37,3 +54,10 @@ Thumbs.db
 Servers
 .metadata
 upload
+=======
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+>>>>>>> 9eea3a86861f1c10c25d636d3c4271e3e86adc63
