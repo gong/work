@@ -15,9 +15,9 @@
 
     <mvc:annotation-driven/>
     <!-- aspectj aop启用CGliB代理 -->
-    <aop:aspectj-autoproxy expose-proxy="true" proxy-target-class="true"/>
+   <!-- <aop:aspectj-autoproxy expose-proxy="true" proxy-target-class="true"/>-->
     <context:component-scan base-package="com.gong.controller"/>
-    <context:component-scan base-package="com.gong.ws"/>
+    <context:component-scan base-package="com.gong.mobileApi"/>
     <!-- 配置结果页面 前缀和后缀 -->
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="order" value="10"></property>
@@ -53,5 +53,11 @@
     </bean>-->
     <bean id="multipartResolver" class="org.springframework.web.multipart.support.StandardServletMultipartResolver">
     </bean>
-
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/app/**"/>
+            <!--<mvc:exclude-mapping path="" />-->
+            <bean class="com.gong.utils.AuthInteceptor" />
+        </mvc:interceptor>
+    </mvc:interceptors>
 </beans>

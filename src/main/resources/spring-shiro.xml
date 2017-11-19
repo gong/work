@@ -50,6 +50,7 @@
                 /getVerifyCode = anon
                 /static/** = anon
                 /logout=logout
+                /app/**=anon
                 /** = authc
                 <!--
                   anon  不需要认证
